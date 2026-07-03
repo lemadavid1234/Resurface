@@ -1,0 +1,18 @@
+# Environment secrets
+.env
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Python
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.venv/
+backend/venv/
+
+# OS / editor
+.DS_Store
+.vscode/
