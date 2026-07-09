@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-import psycopg
+import psycopg #driver that lets FASTApi talk to Postgres
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
