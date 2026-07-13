@@ -23,11 +23,12 @@ class Base(DeclarativeBase):
 #gurantees each request has it own "fresh cart", and that it gets properly close out when request is done
 def get_db():
     #creates a SQLAlchemy Session object
-    #borrow a connection from engine's pool
+    #this session will obtain a database connection from the engine's pool
+    #when it first needs to communicate with PostgresSQL
     db = Session(engine) 
     try:
         #pause and hand the session to the caller
-        #yeild - here's the db object, pause this function here until the caller is finished using it
+        #yield - here's the db object, pause this function here until the caller is finished using it
         yield db
     finally:
         #once the route finishes (even if an exception occurs), FastAPI resumes the generator right after yield

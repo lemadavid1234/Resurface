@@ -4,6 +4,10 @@ from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
+#SQLAlchemy ORM (Object Relational Mapping) Model
+#model tells SQLAlchemy: "here is what a Screenshot object looks like,
+#and here's how it maps to a database table"
+
 #describes what's stored in the database
 class Screenshot(Base):
     __tablename__ = "screenshots"
@@ -12,6 +16,8 @@ class Screenshot(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     #required, so no optional
     image_url: Mapped[str]
+
+    #optional fields
     extracted_text: Mapped[Optional[str]]
     category: Mapped[Optional[str]]
     ai_summary: Mapped[Optional[str]]
