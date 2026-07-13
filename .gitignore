@@ -12,6 +12,7 @@ backend/**/__pycache__/
 backend/*.pyc
 backend/.venv/
 backend/venv/
+backend/uploads
 
 # OS / editor
 .DS_Store

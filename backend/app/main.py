@@ -9,14 +9,22 @@ from fastapi import Depends #for session dependency injection
 from sqlalchemy.orm import Session #type annotation for db
 from app.database import get_db
 from app.models import Screenshot
-from app.schemas import ScreenshotCreate, ScreenshotRead
+from app.schemas import ScreenshotRead
 
+from fastapi import UploadFile, File #types for receiving a real uploaded file in a request
+
+from fastapi.staticfiles import StaticFiles
+
+import uuid #generate a unique name server-side for each screenshot
 
 #load .env file
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
-#create App
+#create a new FastAPI application
 app = FastAPI()
+
+#anything saved into "/uploads" folder becomes reachable at http://localhost:8000/uploads/<filename>
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 #the route - decorator (@app.get("/health"))
 #read endpoint decorator
@@ -43,15 +51,26 @@ def health():
 
 #create endpoint decorator
 @app.post("/screenshots", response_model=ScreenshotRead)
-def create_screenshot(screenshot: ScreenshotCreate, db: Session = Depends(get_db)):
-    new_screenshot = Screenshot(image_url=screenshot.image_url)
+def create_screenshot(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    unique_filename = f"{uuid.uuid4()}_{file.filename}"
+    contents = file.file.read()
+
+    #write binary to filepath
+    #read every byte from the uploaded temporary file and store those bytes in the variable contents
+    with open(f"uploads/{unique_filename}", "wb") as f:
+        f.write(contents)
+
+    image_url = f"http://localhost:8000/uploads/{unique_filename}"
+    
+    new_screenshot = Screenshot(image_url=image_url)
     db.add(new_screenshot)
     db.commit()
     db.refresh(new_screenshot)
     
-    return new_screenshot
+    return new_screenshot #return this object back as the HTTP response to whoever made the request (to client)
 
 
 @app.get("/screenshots", response_model=list[ScreenshotRead])
 def list_screenshots(db: Session = Depends(get_db)):
     return db.query(Screenshot).all()
+
