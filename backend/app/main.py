@@ -17,6 +17,8 @@ from fastapi.staticfiles import StaticFiles
 
 import uuid #generate a unique name server-side for each screenshot
 
+from fastapi.middleware.cors import CORSMiddleware #enables CORS: allows frontend to make cross-origin requests
+
 #load .env file
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
@@ -25,6 +27,17 @@ app = FastAPI()
 
 #anything saved into "/uploads" folder becomes reachable at http://localhost:8000/uploads/<filename>
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+#allow_origins: explicitly whitelisting frontend origin
+#allow_methods: using GET, POST, later add DELETE
+#allow_headers: permits the request headers frontend will actually send
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 #the route - decorator (@app.get("/health"))
 #read endpoint decorator
