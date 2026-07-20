@@ -21,6 +21,7 @@ class Base(DeclarativeBase):
 
 
 #gurantees each request has it own "fresh cart", and that it gets properly close out when request is done
+#designed to be driven by FastAPI's own dependency-injection machinery via (Depends(get_db))
 def get_db():
     #creates a SQLAlchemy Session object
     #this session will obtain a database connection from the engine's pool
