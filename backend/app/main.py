@@ -33,6 +33,8 @@ load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 #create a new FastAPI application
 app = FastAPI()
 
+#os creates dir if it's missing, and does nothing (no error) if it already exists
+os.makedirs("uploads", exist_ok=True)
 #anything saved into "/uploads" folder becomes reachable at http://localhost:8000/uploads/<filename>
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
