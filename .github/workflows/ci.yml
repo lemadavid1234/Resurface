@@ -39,9 +39,14 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r backend/requirements.txt
+        
+      - name: Run migrations
+        working-directory: backend
+        run: alembic upgrade head
 
       - name: Run tests
         working-directory: backend
         run: pytest
+
 
       
