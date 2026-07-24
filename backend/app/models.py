@@ -6,6 +6,8 @@ from app.database import Base
 
 from enum import Enum #Enum class for pending/completed/failed Screenshot status
 
+from sqlalchemy.dialects.postgresql import TSVECTOR
+
 #SQLAlchemy ORM (Object Relational Mapping) Model
 #model tells SQLAlchemy: "here is what a Screenshot object looks like,
 #and here's how it maps to a database table"
@@ -33,6 +35,11 @@ class Screenshot(Base):
     ai_summary: Mapped[Optional[str]]
     programming_language: Mapped[Optional[str]]
     source_platform: Mapped[Optional[str]]
+
+    #postgres automatically generates this TSVECTOR from extracted_text
+    #map it here so SQLAlchemy knows the column exists and can query it
+    text_search: Mapped[Optional[TSVECTOR]] = mapped_column(TSVECTOR)
+
 
     #Postgres itself fills in the timestamp when a row is inserted
     #via Postgres's own 'now()' function

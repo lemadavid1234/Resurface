@@ -25,6 +25,10 @@ from fastapi.middleware.cors import CORSMiddleware #enables CORS: allows fronten
 import easyocr
 from fastapi import BackgroundTasks
 
+#sqlalchemy doesn't know about every SQL function that every database supports
+#therefore has generic object called func: func.some_function(...) -SQLAlchemy gen SQL like-> some_function(...)
+from sqlalchemy import func 
+
 reader = easyocr.Reader(['en'], gpu=False)
 
 #load .env file
@@ -96,8 +100,38 @@ def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File
 
 
 @app.get("/screenshots", response_model=list[ScreenshotRead])
-def list_screenshots(db: Session = Depends(get_db)):
-    return db.query(Screenshot).all()
+def list_screenshots(db: Session = Depends(get_db), q: str | None = None):
+    
+    #starts with a query representing: SELECT * FROM screenshots
+    #query is a SQLAlchemy object that represents an entire SQL query against the screenshots table
+    query = db.query(Screenshot)
+
+    if q:
+        #convert python string to PostgreSQL tsquery object
+        tsquery = func.websearch_to_tsquery("english", q)
+
+        query = (
+            query
+            #.filter builds the WHERE clause
+            .filter(
+            #returns a SQLAlchemy object that represents the SQL: "text_search @@ websearch_to_tsquery('english', q)"
+            #.op("@@"): creates a function that applies the PostgreSQL @@ operator to this column
+            Screenshot.text_search.op("@@")(tsquery) #PostgreSQL evaluates this condition for each row (using the GIN index to efficiently find matching rows).
+            )
+            .order_by(
+                func.ts_rank( #PostgreSQL relavance scoring function for full-text search. 
+                              #Given a document (tsvector) and a search query (tsquery), calculate how well the document matches the query
+                    Screenshot.text_search,
+                    tsquery
+                ).desc()
+            )
+        )
+    
+    #query.all() : send this completed SQL query to PostgreSQL and return the results
+    #if q is empty: execute GET /screenshots, else execute GET /screenshots?q=react hooks
+    return query.all()
+
+
 
 
 def run_ocr(screenshot_id: int, file_path: str):
