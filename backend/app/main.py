@@ -29,6 +29,9 @@ from fastapi import BackgroundTasks
 #therefore has generic object called func: func.some_function(...) -SQLAlchemy gen SQL like-> some_function(...)
 from sqlalchemy import func 
 
+from app.ai import classify_screenshot
+
+
 reader = easyocr.Reader(['en'], gpu=False)
 
 #load .env file
@@ -94,7 +97,7 @@ def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File
     db.commit() #save it, SQLAlchem sends SQL statement to database. Now the row exists in Postgres. DB will autogenerate values.
     db.refresh(new_screenshot) #copies (id, created_at... etc) unknown values into new_screenshot object
     
-    background_tasks.add_task(run_ocr, new_screenshot.id, f"uploads/{unique_filename}")
+    background_tasks.add_task(run_enrichment, new_screenshot.id, f"uploads/{unique_filename}")
 
     return new_screenshot #return this object back as the HTTP response to whoever made the request (to client)
 
@@ -134,7 +137,7 @@ def list_screenshots(db: Session = Depends(get_db), q: str | None = None):
 
 
 
-def run_ocr(screenshot_id: int, file_path: str):
+def run_enrichment(screenshot_id: int, file_path: str):
     
     with Session(engine) as db:
         #db.get(ModelClass, primary_key). Telling SQLAlchemy: 1. Which table? 2. Which row?
@@ -153,6 +156,14 @@ def run_ocr(screenshot_id: int, file_path: str):
             
             #SQLAlchemy only tracks changes made directly to the mapped object's attributes
             screenshot.extracted_text = " ".join(text_fragments)
+
+            #use ai classification method to fill remaining properties
+            classification = classify_screenshot(file_path)
+            
+            screenshot.category = classification.category
+            screenshot.ai_summary = classification.ai_summary
+            screenshot.programming_language = classification.programming_language
+            screenshot.source_platform = classification.source_platform
 
             screenshot.status = ScreenshotStatus.COMPLETED
         except Exception:
