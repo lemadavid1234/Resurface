@@ -7,6 +7,7 @@ from app.database import Base
 from enum import Enum #Enum class for pending/completed/failed Screenshot status
 
 from sqlalchemy.dialects.postgresql import TSVECTOR
+from sqlalchemy import Computed
 
 #SQLAlchemy ORM (Object Relational Mapping) Model
 #model tells SQLAlchemy: "here is what a Screenshot object looks like,
@@ -38,7 +39,13 @@ class Screenshot(Base):
 
     #postgres automatically generates this TSVECTOR from extracted_text
     #map it here so SQLAlchemy knows the column exists and can query it
-    text_search: Mapped[Optional[TSVECTOR]] = mapped_column(TSVECTOR)
+    #TSVECTOR: sql type of column
+    #Computed(...): tells sqlalchemy's statement building logic to leave this column out of 'INSERT'/'UPDATE' entirely, regardless of its current Python value
+    text_search: Mapped[Optional[str]] = mapped_column(
+        TSVECTOR,                                                        
+        Computed("to_tsvector('english', coalesce(extracted_text, ''))",
+        persisted=True),
+    )
 
 
     #Postgres itself fills in the timestamp when a row is inserted
