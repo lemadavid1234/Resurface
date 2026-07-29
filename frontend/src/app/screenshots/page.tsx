@@ -50,7 +50,12 @@ export default async function ScreenshotsPage(
             </form>
             <UploadForm/>
             {screenshots.map((screenshot)=> (
-                <img key={screenshot.id} src={screenshot.image_url} alt="" />
+                <div key={screenshot.id}>
+                    <img src={screenshot.image_url} alt="" />
+                    {screenshot.category && <p>{screenshot.category}</p>}
+                    {screenshot.ai_summary && <p>{screenshot.ai_summary}</p>}
+                </div>
+
             ))}
         </div>
 
