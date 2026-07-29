@@ -13,6 +13,8 @@ jobs:
           POSTGRES_USER: testuser
           POSTGRES_PASSWORD: testpass
           POSTGRES_DB: testdb
+          POSTGRES_PORT: 5432
+          OPENAI_API_KEY: sk-test-fake-key-for-ci
         ports:
           - 5432:5432
         options: >-
