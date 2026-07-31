@@ -1,7 +1,11 @@
 from pydantic import BaseModel, ConfigDict
+from datetime import datetime
+#schema is the contract between your backend and your client
 
 #schema describing what actually gets sent back to the client
 #describes what your API returns to the client after the screenshot has been created or retreived
+
+#this is the shape of a Screenshot when reading data from the API
 class ScreenshotRead(BaseModel):
     #Pydantic needs to know it's allowed to read data off of it by attribute access
     #by default Pydantic v2 expects to build a model from a plain dict, not an abitratry Python object
@@ -14,5 +18,8 @@ class ScreenshotRead(BaseModel):
     ai_summary: str | None
     programming_language: str | None
     source_platform: str | None
+
+    created_at: datetime
+
 
 
