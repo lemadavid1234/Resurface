@@ -43,18 +43,23 @@ export default function UploadForm() {
 
     return (
         <>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="flex items-center gap-3">
                 <input
                     type="file"
                     onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                    className="text-sm text-gray-500 file:mr-3 file:px-3 file:py-1.5 file:rounded file:border file:border-gray-300 file:bg-gray-50 file:text-gray-700 file:font-medium hover:file:bg-gray-100"
                 />
 
-                <button type="submit" disabled={status === "uploading"}>
+                <button 
+                    type="submit" 
+                    disabled={status === "uploading"}
+                    className="px-4 py-1.5 rounded bg-amber-600 text-white text-sm font-medium disabled:opacity-50"
+                >
                     {status === "uploading" ? "uploading..." : "Upload"}
                 </button>
             </form>
-            {status === "success" && <p>Successful Upload.</p>}
-            {status === "error" && <p>Failed to Upload. Try again.</p>}
+            {status === "success" && <p className="text-sm text-green-600">Successful Upload.</p>}
+            {status === "error" && <p className="text-sm text-red-600">Failed to Upload. Try again.</p>}
         </>
     )
 
