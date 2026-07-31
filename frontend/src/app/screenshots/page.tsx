@@ -2,19 +2,11 @@
 
 import UploadForm from "./UploadForm";
 
+//use import type { } ... (recommended) since when TypeScript compiles your code, types disappear. They do not exist at runtime
+//says: “Only import this for type checking. Remove this import from the generated JavaScript.”
+import type { Screenshot } from "./types";
 
-//since res.json returns type 'any', since project's tsconfig.json has strict: true
-//which includes a rule called noImplicitAny, it refuses to let a type silently become 'any
-//without me explicitly acknowledging it
-type Screenshot = {
-    id: number;
-    image_url: string;
-    extracted_text: string | null;
-    category: string | null;
-    ai_summary: string | null;
-    programming_language: string | null;
-    source_platform: string | null;
-};
+import ScreenshotCard  from "./ScreenshotCard";
 
 
 //async function because...
@@ -49,14 +41,11 @@ export default async function ScreenshotsPage(
                 <button type="submit">Search</button>
             </form>
             <UploadForm/>
-            {screenshots.map((screenshot)=> (
-                <div key={screenshot.id}>
-                    <img src={screenshot.image_url} alt="" />
-                    {screenshot.category && <p>{screenshot.category}</p>}
-                    {screenshot.ai_summary && <p>{screenshot.ai_summary}</p>}
-                </div>
-
-            ))}
+            <div className="grid grid-cols-3 gap-4 p-4">
+                {screenshots.map((screenshot)=> (
+                    <ScreenshotCard key={screenshot.id} screenshot={screenshot} />
+                ))}
+            </div>
         </div>
 
     )
