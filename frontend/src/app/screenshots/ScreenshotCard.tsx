@@ -1,5 +1,7 @@
 import type { Screenshot } from './types';
 
+import Link from "next/link";
+
 //UI: display how long ago screenshot was posted
 function formatRelativeDate(isoString: string): string {
 
@@ -17,10 +19,14 @@ function formatRelativeDate(isoString: string): string {
 }
 
 
-export default function ScreenshotCard({ screenshot }: { screenshot: Screenshot }) {
+export default function ScreenshotCard({ screenshot, q }: { screenshot: Screenshot; q?: string }) {
+
+    const href = q
+        ? `?q=${encodeURIComponent(q)}&screenshot=${screenshot.id}`
+        :  `?screenshot=${screenshot.id}`;
 
     return (
-        <div className='border border-gray-400 rounded-lg overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition'>
+        <Link href={href} className='block border border-gray-400 rounded-lg overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition'>
             <img src={screenshot.image_url} alt={screenshot.category ?? "Saved screenshot"} className="w-full" />
             <div className="p-3 flex flex-col gap-1">
                 <p className="font-semibold text-amber-700">
@@ -58,6 +64,6 @@ export default function ScreenshotCard({ screenshot }: { screenshot: Screenshot 
                     {formatRelativeDate(screenshot.created_at)}
                 </p>
             </div>
-        </div>
+        </Link>
     )
 }
