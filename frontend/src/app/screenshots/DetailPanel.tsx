@@ -1,6 +1,8 @@
 import type { Screenshot } from "./types"
 import Link from "next/link";
 
+import DeleteButton from "./DeleteButton";
+
 export default function DetailPanel({ screenshot, q } : { screenshot: Screenshot; q?: string }) {
 
     const closeHref = q ? `?q=${encodeURIComponent(q)}` : "/screenshots";
@@ -52,7 +54,11 @@ export default function DetailPanel({ screenshot, q } : { screenshot: Screenshot
                     </div>
                 )}
 
-             </div>
+                <div className="border-t border-gray-200 pt-3 mt-2 flex justify-center">
+                    <DeleteButton screenshot_id={screenshot.id} closeHref={closeHref}></DeleteButton>
+                </div>
+
+            </div>
         </div>
     )
 }
