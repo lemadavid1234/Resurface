@@ -25,6 +25,8 @@ from fastapi.middleware.cors import CORSMiddleware #enables CORS: allows fronten
 import easyocr
 from fastapi import BackgroundTasks
 
+from fastapi import HTTPException
+
 #sqlalchemy doesn't know about every SQL function that every database supports
 #therefore has generic object called func: func.some_function(...) -SQLAlchemy gen SQL like-> some_function(...)
 from sqlalchemy import func 
@@ -172,3 +174,32 @@ def run_enrichment(screenshot_id: int, file_path: str):
         #any attribute edits are marked as "dirty" inside Sessions internal bookkeeping automatically (without calling db.add())
         db.commit() #when db.commit runs, Session looks at everything it's tracking, finds what's dirty and generates correct SQL
 
+
+#whenever someone sends a DELETE request to /screenshots/{screenshot_id}, run delete_screenshot(), if successful return HTTP status code 204 (No Content)
+@app.delete("/screenshots/{screenshot_id}", status_code=204)
+def delete_screenshot(screenshot_id: int, db: Session = Depends(get_db)):
+
+    screenshot = db.get(Screenshot, screenshot_id)
+
+    #if screenshot not found, STOP function.
+    #FastAPI catches that HTTPException and converts it into an HTTP response for the client
+    #browser/client receieves: HTTP/1.1 404 Not Found, with a JSON body like { detail: "Screenshot not found" }
+    if not screenshot:
+        raise HTTPException(status_code=404, detail="Screenshot not found")
+
+    #remove file from local disk storage
+    local_path = screenshot.image_url.replace("http://localhost:8000/uploads/", "uploads/")
+
+    try:
+        os.remove(local_path)
+    except FileNotFoundError:
+        pass
+
+    db.delete(screenshot)
+    db.commit()
+
+
+
+
+
+    
