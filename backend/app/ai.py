@@ -1,15 +1,15 @@
-from pathlib import Path
+from app.config import OPENAI_API_KEY
 
-from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel
+
 
 import base64 #python module that handles Base64 encoding and decoding
 import mimetypes #module that converts between a filename or URL and the MIME type associated with the file extension
 
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
-
-client = OpenAI()
+#sdk already knows how to read api_key from environment, but this is explicitly reading the env variable and passing it to the client
+#   aka: make the client construction explicit instead of relying on the SDK's own internal env lookup
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 class ScreenshotClassification(BaseModel):
     category: str

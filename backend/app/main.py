@@ -1,8 +1,8 @@
+from app.config import POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_DB
 import os
-from pathlib import Path
+
 import psycopg #driver that lets FASTApi talk to Postgres
 
-from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from fastapi import Depends #for session dependency injection
@@ -33,11 +33,7 @@ from sqlalchemy import func
 
 from app.ai import classify_screenshot
 
-
 reader = easyocr.Reader(['en'], gpu=False)
-
-#load .env file
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 #create a new FastAPI application
 app = FastAPI()
@@ -67,10 +63,10 @@ def health():
     try:
         conn = psycopg.connect(
             host="localhost",
-            port=os.environ["POSTGRES_PORT"],
-            user=os.environ["POSTGRES_USER"],
-            password=os.environ["POSTGRES_PASSWORD"],
-            dbname=os.environ["POSTGRES_DB"],
+            port=POSTGRES_PORT,
+            user=POSTGRES_USER,
+            password=POSTGRES_PASSWORD,
+            dbname=POSTGRES_DB,
         )
         conn.execute("SELECT 1")
         conn.close()

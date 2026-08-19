@@ -1,17 +1,9 @@
-import os
-
-from pathlib import Path #instead of treating Path as string, it creates a Path object that has useful methods
-
-from dotenv import load_dotenv
+from app.config import POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_DB
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session
 
-
-#find .env file in proj root and load its env variables into Python program
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
-
 #connection string SQLAlchemy needs to reach Postgres (dialect+driver://user:pass@host:port/dbname)
-database_url = f'postgresql+psycopg://{os.environ["POSTGRES_USER"]}:{os.environ["POSTGRES_PASSWORD"]}@localhost:{os.environ["POSTGRES_PORT"]}/{os.environ["POSTGRES_DB"]}'
+database_url = f'postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:{POSTGRES_PORT}/{POSTGRES_DB}'
 
 #manages a pool of reusable connections to Postgres, built from database_url; doesn't connect yet
 engine = create_engine(database_url)
