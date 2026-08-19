@@ -2,13 +2,11 @@
 
 import UploadForm from "./UploadForm";
 
-//use import type { } ... (recommended) since when TypeScript compiles your code, types disappear. They do not exist at runtime
-//says: “Only import this for type checking. Remove this import from the generated JavaScript.”
-import type { Screenshot } from "./types";
-
 import ScreenshotCard from "./ScreenshotCard";
 
 import DetailPanel from "./DetailPanel";
+
+import { getScreenshots } from "./getScreenshots";
 
 
 //async function because...
@@ -22,19 +20,9 @@ export default async function ScreenshotsPage(
     //however, trimming "    " will result in "" therefore q is falsy and will render all screenshot
     const searchQuery = q?.trim();
 
-    //construct url: if q exists encode search terms into url, else return all
-    const url = searchQuery
-        ? `http://localhost:8000/screenshots?q=${encodeURIComponent(searchQuery)}`
-        : "http://localhost:8000/screenshots";
-
-
-    //sends HTTP request, res is a Response object (entire HTTP response). 
-    //res is a "package" that contains status,headers,body,methods
-    const res = await fetch(url);
-
-    //.json() reads the response body and converts the JSON into a JavaScript object
-    //now screenshots contains a normal Javascript array with the actual data
-    const screenshots: Screenshot[] = await res.json();
+    //don't need ': Screenshot[]' annotation here since TS already knows the return type from getScreenshot's own signature and infers it automatically
+    //also means 'import type { Screenshot } from ./types' line becomes unused
+    const screenshots = await getScreenshots(searchQuery);
 
     //once screenshots is fetched
     const selected = selectedId ? screenshots.find((s) => s.id === Number(selectedId)) : undefined;
