@@ -1,5 +1,8 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
+
+from app.models import ScreenshotStatus
+
 #schema is the contract between your backend and your client
 
 #schema describing what actually gets sent back to the client
@@ -18,6 +21,8 @@ class ScreenshotRead(BaseModel):
     ai_summary: str | None
     programming_language: str | None
     source_platform: str | None
+
+    status: ScreenshotStatus
 
     created_at: datetime
 

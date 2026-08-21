@@ -10,4 +10,7 @@ export type Screenshot = {
     programming_language: string | null;
     source_platform: string | null;
     created_at: string;
+
+    status: "pending" | "completed" | "failed";
+
 };

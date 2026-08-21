@@ -105,6 +105,7 @@ def list_screenshots(db: Session = Depends(get_db), q: str | None = None):
     
     #starts with a query representing: SELECT * FROM screenshots
     #query is a SQLAlchemy object that represents an entire SQL query against the screenshots table
+    #base query returns all screenshots in order of descending created_at
     query = db.query(Screenshot)
 
     if q:
@@ -127,9 +128,11 @@ def list_screenshots(db: Session = Depends(get_db), q: str | None = None):
                 ).desc()
             )
         )
+    else:
+        query = query.order_by(Screenshot.created_at.desc())
     
     #query.all() : send this completed SQL query to PostgreSQL and return the results
-    #if q is empty: execute GET /screenshots, else execute GET /screenshots?q=react hooks
+    #if q is empty: execute GET /screenshots by descending, else execute GET /screenshots?q=react hooks
     return query.all()
 
 

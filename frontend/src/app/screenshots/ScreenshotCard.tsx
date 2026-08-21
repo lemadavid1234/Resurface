@@ -2,6 +2,8 @@ import type { Screenshot } from './types';
 
 import Link from "next/link";
 
+import { getStatusLabel } from "./getStatusLabel";
+
 //UI: display how long ago screenshot was posted
 function formatRelativeDate(isoString: string): string {
 
@@ -23,14 +25,16 @@ export default function ScreenshotCard({ screenshot, q }: { screenshot: Screensh
 
     const href = q
         ? `?q=${encodeURIComponent(q)}&screenshot=${screenshot.id}`
-        :  `?screenshot=${screenshot.id}`;
+        : `?screenshot=${screenshot.id}`;
 
     return (
         <Link href={href} className='block border border-gray-400 rounded-lg overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition'>
             <img src={screenshot.image_url} alt={screenshot.category ?? "Saved screenshot"} className="w-full" />
             <div className="p-3 flex flex-col gap-1">
-                <p className="font-semibold text-amber-700">
-                    {screenshot.category ?? "Uncategorized"}
+                <p className={screenshot.status === "pending" ? "font-semibold text-gray-600"
+                    : screenshot.status === "failed" ? "font-semibold text-red-600"
+                        : "font-semibold text-amber-700"}>
+                    {getStatusLabel(screenshot)}
                 </p>
 
                 {screenshot.ai_summary && (

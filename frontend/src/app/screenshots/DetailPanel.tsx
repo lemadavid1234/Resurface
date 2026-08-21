@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import DeleteButton from "./DeleteButton";
 
+import { getStatusLabel } from "./getStatusLabel";
+
 export default function DetailPanel({ screenshot, q } : { screenshot: Screenshot; q?: string }) {
 
     const closeHref = q ? `?q=${encodeURIComponent(q)}` : "/screenshots";
@@ -17,9 +19,11 @@ export default function DetailPanel({ screenshot, q } : { screenshot: Screenshot
                 </Link>
 
                 <img src={screenshot.image_url} alt={screenshot.category ?? "Saved screenshot"} className="w-full rounded"/>
-                
-                <p className="font-semibold text-amber-700 text-lg">
-                    {screenshot.category ?? "Uncategorized"}
+
+                <p className={screenshot.status === "pending" ? "font-semibold text-gray-600 text-lg"
+                    : screenshot.status === "failed" ? "font-semibold text-red-600 text-lg"
+                        : "font-semibold text-amber-700 text-lg"}>
+                    {getStatusLabel(screenshot)}
                 </p>
 
                 {screenshot.ai_summary && (
