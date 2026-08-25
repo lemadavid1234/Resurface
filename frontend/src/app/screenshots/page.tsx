@@ -1,6 +1,6 @@
 //app router -> localhost/screenshots opens this page.tsx
 
-import UploadForm from "./UploadForm";
+import UploadModal from "./UploadModal";
 
 import ScreenshotCard from "./ScreenshotCard";
 
@@ -46,7 +46,7 @@ export default async function ScreenshotsPage(
                         Search
                     </button>
                 </form>
-                <UploadForm />
+                <UploadModal />
             </div>
             <div className="grid grid-cols-3 gap-4 p-4">
                 {screenshots.map((screenshot) => (
