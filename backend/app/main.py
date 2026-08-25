@@ -198,7 +198,13 @@ def delete_screenshot(screenshot_id: int, db: Session = Depends(get_db)):
     db.commit()
 
 
+@app.get("/screenshots/{screenshot_id}", response_model=ScreenshotRead)
+def get_screenshot(screenshot_id: int, db: Session = Depends(get_db)):
 
+    screenshot = db.get(Screenshot, screenshot_id)
 
+    if not screenshot:
+        raise HTTPException(status_code=404, detail="Screenshot not found")
 
-    
+    return screenshot
+
