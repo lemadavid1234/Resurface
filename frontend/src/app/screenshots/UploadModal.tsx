@@ -5,6 +5,8 @@ import { useState, useRef, useEffect } from "react";
 
 import { useRouter } from "next/navigation";
 
+import { Upload } from "lucide-react";
+
 export default function UploadModal() {
 
     const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -110,8 +112,13 @@ export default function UploadModal() {
     return (
         <>
             {/* click background to close */}
-            <button onClick={() => setIsOpen(true)} className="rounded bg-amber-600 text-white px-4 py-1.5 font-medium">
-                Upload Screenshot
+            <button 
+                onClick={() => setIsOpen(true)} 
+                className="rounded bg-amber-600 text-white px-3 py-1.5 font-medium"
+                aria-label="Upload screenshot"
+            >
+                <Upload size={18} className="lg:hidden"/>
+                <span className="hidden lg:inline">Upload Screenshot</span>
             </button>
 
 
