@@ -3,22 +3,18 @@
 //useRef - a React Hook that lets you keep a value between renders without causing a re-render when that value changes
 import { useState, useRef, useEffect } from "react";
 
-import { useRouter } from "next/navigation";
-
 import { Upload } from "lucide-react";
 
+import UploadItemRow from "./UploadItemRow";
+
+
 export default function UploadModal() {
-
+    
     const [isOpen, setIsOpen] = useState<boolean>(false);
-    const [status, setStatus] = useState<"idle" | "processing" | "uploading" | "completed" | "failed">("idle");
-
-    const [file, setFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false); //to show different UI in both cases
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [screenshotId, setScreenshotId] = useState<number | null>(null);
-
-    const router = useRouter();
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
     //event handlers
     function handleDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -29,10 +25,12 @@ export default function UploadModal() {
         setIsDragging(false);
 
         //if user drops something that isn't a file then droppedFile = undefined
-        const droppedFile = e.dataTransfer.files?.[0];
-        if (droppedFile) {
-            setFile(droppedFile);
-            uploadFile(droppedFile);
+        //const droppedFile = e.dataTransfer.files?.[0]; 
+        //e.dataTransfer.files and e.target.files are both a FileList (array-like), must be converted into a real JavaScript array 
+        const droppedFiles = Array.from(e.dataTransfer.files ?? []);
+
+        if (droppedFiles.length > 0) {
+            setSelectedFiles(droppedFiles);
         };
     }
 
@@ -46,68 +44,16 @@ export default function UploadModal() {
     }
 
     function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-        const selectedFile = e.target.files?.[0];
-        if (selectedFile) {
-            setFile(selectedFile);
-            uploadFile(selectedFile);
+        const selected = Array.from(e.target.files ?? [])
+        if (selected.length > 0) {
+            setSelectedFiles(selected);
         }
     }
 
-    async function uploadFile(fileToUpload: File) {
-        setStatus("uploading");
-        const formData = new FormData();
-        formData.append("file", fileToUpload); //without it, request body was always empty regardless of what file got passed in
-
-        try {
-            const res = await fetch("http://localhost:8000/screenshots", {
-                method: "POST",
-                body: formData,
-            });
-
-            if (!res.ok) {
-                setStatus("failed");
-                return;
-            }
-
-            const newScreenshot = await res.json();
-            setScreenshotId(newScreenshot.id);
-            setStatus("processing");
-
-        } catch {
-            setStatus("failed");
-        }
+    function closeModal() {
+        setIsOpen(false);
+        setSelectedFiles([]); //clear selectedFiles in order to not silently re-upload every file
     }
-
-    useEffect(() => {
-        if (status !== "processing" || !screenshotId) return;
-
-        const intervalId = setInterval(async () => {
-            const res = await fetch(`http://localhost:8000/screenshots/${screenshotId}`);
-            const data = await res.json();
-
-            if (data.status === "completed") {
-                clearInterval(intervalId);
-                setStatus("completed");
-            } else if (data.status === "failed") {
-                clearInterval(intervalId);
-                setStatus("failed");
-            }
-        }, 2000);
-
-        return () => clearInterval(intervalId);
-    }, [status, screenshotId]);
-
-    useEffect(() => {
-        if (status !== "completed") return;
-
-        const timeoutId = setTimeout(() => {
-            setIsOpen(false);
-            router.refresh();
-        }, 900);
-
-        return () => clearTimeout(timeoutId);
-    }, [status, router]);
-
 
     return (
         <>
@@ -126,11 +72,22 @@ export default function UploadModal() {
             {isOpen && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
-                    <button onClick={() => setIsOpen(false)} className="absolute inset-0" aria-label="Close" />
+                    <button onClick={closeModal} className="absolute inset-0" aria-label="Close" />
                     <div className="relative bg-white rounded-3xl p-8 w-full max-w-xl flex flex-col gap-4">
-                        <button onClick={() => setIsOpen(false)} className="self-end text-sm text-gray-400 hover:text-gray-600">Close</button>
+                        <div className="flex flex-col gap-2">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-semibold tracking-tight">Upload Files</h2>
+                                <button 
+                                    onClick={closeModal} 
+                                    className="self-end text-sm text-gray-400 hover:text-gray-600"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                            <p className="text-lg text-gray-500">Choose multiple files at once - PNG, JPG</p>
+                        </div>
 
-                        {status === "idle" && (
+                        {selectedFiles.length === 0 ? (
                             <>
                                 <div
                                     onDrop={handleDrop}
@@ -155,45 +112,18 @@ export default function UploadModal() {
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/png, image/jpeg"
+                                    multiple
                                     className="hidden"
                                     onChange={handleFileSelect}
                                 />
-                            </>
-                        )}
-
-                        {(status === "uploading" || status==="processing") && (
-                            <p className="text-sm text-gray-600">
-                                {file?.name} - {status === "uploading" ? "Uploading..." : "Processing..."}
-                            </p>
-                        )}
-
-                        {status==="completed" && (
-                            <p className="text-sm text-green-600 text-center py-8">Completed!</p>
-                        )}
-
-                        {status==="failed" && (
-                            <div className="flex flex-col items-center text-center gap-3 py-4">
-                                <p className="font-semibold">We couldn&apos;t process that screenshot</p>
-                                <p className="text-sm text-gray-500">
-                                    The upload didn&apos;t finish. Check your connection and try again - nothing was saved.
-                                </p>
-                                <div className="flex gap-2 mt-2">
-                                    <button 
-                                        onClick={() => { setFile(null); setStatus("idle"); setScreenshotId(null); }}
-                                        className="px-3 py-1.5 rounded text-sm text-gray-600"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button 
-                                        onClick={() => file && uploadFile(file)}
-                                        className="px-3 py-1.5 rounded bg-amber-600 text-white text-sm font-medium"
-                                    >
-                                        Try again
-                                    </button>
-                                </div>
+                            </> 
+                        ) : (
+                            <div className="flex flex-col gap-1">
+                                {selectedFiles.map((f, index) => (
+                                    <UploadItemRow key={`${f.name}-${f.size}-${index}`} file={f} />
+                                ))}
                             </div>
                         )}
-
                     </div>
                 </div>
             )}
