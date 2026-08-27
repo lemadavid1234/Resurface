@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 
 import { scheduleGridRefresh } from "./scheduleGridRefresh"; //debouncing refresh
 
+import { API_URL } from "./apiUrl";
+
 export default function UploadItemRow({ file }: {file: File} ) {
 
     const [status, setStatus] = useState<"uploading" | "processing" | "completed" | "failed">("uploading");
@@ -24,7 +26,11 @@ export default function UploadItemRow({ file }: {file: File} ) {
             formData.append("file", file); //without it, request body was always empty regardless of what file got passed in
 
             try {
-                const res = await fetch("http://localhost:8000/screenshots", {
+                // const res = await fetch("http://localhost:8000/screenshots", {
+                //     method: "POST",
+                //     body: formData,
+                // });
+                const res = await fetch(`${API_URL}/screenshots`, {
                     method: "POST",
                     body: formData,
                 });
@@ -50,7 +56,9 @@ export default function UploadItemRow({ file }: {file: File} ) {
         if (status !== "processing" || !screenshotId) return;
 
         const intervalId = setInterval(async () => {
-            const res = await fetch(`http://localhost:8000/screenshots/${screenshotId}`);
+            // const res = await fetch(`http://localhost:8000/screenshots/${screenshotId}`);
+            const res = await fetch(`${API_URL}/screenshots/${screenshotId}`);
+
             const data = await res.json();
 
             if (data.status === "completed") {

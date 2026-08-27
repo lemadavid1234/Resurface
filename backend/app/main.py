@@ -1,4 +1,5 @@
 from app.config import POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_DB
+from app.config import API_BASE_URL, CORS_ORIGINS #testing on phone
 import os
 
 import psycopg #driver that lets FASTApi talk to Postgres
@@ -48,7 +49,7 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 #allow_headers: permits the request headers frontend will actually send
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=CORS_ORIGINS,#["http://localhost:3000"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -88,7 +89,8 @@ def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File
     with open(f"uploads/{unique_filename}", "wb") as f:
         f.write(contents)
 
-    image_url = f"http://localhost:8000/uploads/{unique_filename}"
+    #image_url = f"http://localhost:8000/uploads/{unique_filename}"
+    image_url = f"{API_BASE_URL}/uploads/{unique_filename}"
     
     new_screenshot = Screenshot(image_url=image_url)
     db.add(new_screenshot) #tells SQLAlchemy, "when we save our changes, include this object"
@@ -187,7 +189,9 @@ def delete_screenshot(screenshot_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Screenshot not found")
 
     #remove file from local disk storage
-    local_path = screenshot.image_url.replace("http://localhost:8000/uploads/", "uploads/")
+    #local_path = screenshot.image_url.replace("http://localhost:8000/uploads/", "uploads/")
+    filename = screenshot.image_url.split("/uploads/")[-1]
+    local_path = f"uploads/{filename}"
 
     try:
         os.remove(local_path)

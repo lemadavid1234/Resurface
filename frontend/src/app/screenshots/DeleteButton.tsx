@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_URL } from "./apiUrl";
 
 
 
@@ -23,10 +24,13 @@ export default function DeleteButton({ screenshot_id, closeHref } : { screenshot
         //fetch call that makes an HTTP DELETE request to FastAPI backend
         //no need for res.json() since there is no response body in 204 DELETE response
         try {
-            const res = await fetch(`http://localhost:8000/screenshots/${screenshot_id}`, 
+            // const res = await fetch(`http://localhost:8000/screenshots/${screenshot_id}`, 
+            //     { method: "DELETE" }
+            // );
+            const res = await fetch(`${API_URL}/screenshots/${screenshot_id}`, 
                 { method: "DELETE" }
             );
-
+            
             if (!res.ok) {
                 setStatus("error");
                 return;
