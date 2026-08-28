@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { scheduleGridRefresh } from "./scheduleGridRefresh"; //debouncing refresh
 
-import { API_URL } from "./apiUrl";
+import { API_URL } from "../apiUrl";
 
 export default function UploadItemRow({ file }: {file: File} ) {
 

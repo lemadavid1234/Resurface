@@ -1,7 +1,7 @@
 "use client";
 
 //useRef - a React Hook that lets you keep a value between renders without causing a re-render when that value changes
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef} from "react";
 
 import { Upload } from "lucide-react";
 

@@ -1,13 +1,13 @@
 //app router -> localhost/screenshots opens this page.tsx
 
-import UploadModal from "./UploadModal";
+import UploadModal from "./upload/UploadModal";
 
 import ScreenshotCard from "./ScreenshotCard";
 
 import DetailPanel from "./DetailPanel";
 
 import { getScreenshots } from "./getScreenshots";
-import SidebarToggleButton from "./SidebarToggleButton";
+import SidebarToggleButton from "./sidebar/SidebarToggleButton";
 
 import { Search } from "lucide-react";
 

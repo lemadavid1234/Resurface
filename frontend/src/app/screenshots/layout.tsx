@@ -1,7 +1,7 @@
 import { getScreenshots } from "./getScreenshots";
 
-import { SidebarProvider } from "./SidebarContext";
-import Sidebar from "./Sidebar";
+import { SidebarProvider } from "./sidebar/SidebarContext";
+import Sidebar from "./sidebar/Sidebar";
 
 export default async function ScreenshotsLayout({ children } : { children: React.ReactNode }) {
 
