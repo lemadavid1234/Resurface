@@ -34,6 +34,8 @@ from sqlalchemy import func
 
 from app.ai import classify_screenshot
 
+from app.storage import upload_screenshot, delete_screenshot_file
+
 reader = easyocr.Reader(['en'], gpu=False)
 
 #create a new FastAPI application
@@ -83,21 +85,19 @@ def health():
 def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File(...), db: Session = Depends(get_db)):
     unique_filename = f"{uuid.uuid4()}_{file.filename}"
     contents = file.file.read()
+    mime_type = file.content_type or "image/png"
 
-    #write binary to filepath
-    #read every byte from the uploaded temporary file and store those bytes in the variable contents
-    with open(f"uploads/{unique_filename}", "wb") as f:
-        f.write(contents)
-
-    #image_url = f"http://localhost:8000/uploads/{unique_filename}"
-    image_url = f"{API_BASE_URL}/uploads/{unique_filename}"
+    #push the raw bytes to a Supabase Storage bucket instead of the local uploads/ folder
+    #returns the file's public URL, which we store on the row so the frontend loads it
+    #straight from Supabase
+    image_url = upload_screenshot(unique_filename, contents, mime_type)
     
     new_screenshot = Screenshot(image_url=image_url)
     db.add(new_screenshot) #tells SQLAlchemy, "when we save our changes, include this object"
     db.commit() #save it, SQLAlchem sends SQL statement to database. Now the row exists in Postgres. DB will autogenerate values.
     db.refresh(new_screenshot) #copies (id, created_at... etc) unknown values into new_screenshot object
     
-    background_tasks.add_task(run_enrichment, new_screenshot.id, f"uploads/{unique_filename}")
+    background_tasks.add_task(run_enrichment, new_screenshot.id, contents, mime_type)
 
     return new_screenshot #return this object back as the HTTP response to whoever made the request (to client)
 
@@ -140,7 +140,7 @@ def list_screenshots(db: Session = Depends(get_db), q: str | None = None):
 
 
 
-def run_enrichment(screenshot_id: int, file_path: str):
+def run_enrichment(screenshot_id: int, contents: bytes, mime_type: str):
     
     with Session(engine) as db:
         #db.get(ModelClass, primary_key). Telling SQLAlchemy: 1. Which table? 2. Which row?
@@ -153,7 +153,7 @@ def run_enrichment(screenshot_id: int, file_path: str):
         screenshot = db.get(Screenshot, screenshot_id)
 
         try:
-            result = reader.readtext(file_path)
+            result = reader.readtext(contents)
             #returns a list of only text that exceeds a confidence score of 0.5 from result (list of tuples)
             text_fragments = [text for (_, text, confidence_score) in result if confidence_score >= 0.5]
             
@@ -161,7 +161,7 @@ def run_enrichment(screenshot_id: int, file_path: str):
             screenshot.extracted_text = " ".join(text_fragments)
 
             #use ai classification method to fill remaining properties
-            classification = classify_screenshot(file_path)
+            classification = classify_screenshot(contents, mime_type)
             
             screenshot.category = classification.category
             screenshot.ai_summary = classification.ai_summary
@@ -188,16 +188,25 @@ def delete_screenshot(screenshot_id: int, db: Session = Depends(get_db)):
     if not screenshot:
         raise HTTPException(status_code=404, detail="Screenshot not found")
 
-    #remove file from local disk storage
-    #local_path = screenshot.image_url.replace("http://localhost:8000/uploads/", "uploads/")
-    filename = screenshot.image_url.split("/uploads/")[-1]
-    local_path = f"uploads/{filename}"
+    #instead of removing from local storage (disk), remove from Supabase Storage
+    #however currently files still live in local disk, so must perform
+    #orphan cleanup/garbage collection
+    if screenshot.image_url.startswith(API_BASE_URL):
+        #remove file from local disk storage
+        #local_path = screenshot.image_url.replace("http://localhost:8000/uploads/", "uploads/")
+        filename = screenshot.image_url.split("/uploads/")[-1]
+        local_path = f"uploads/{filename}"
 
-    try:
-        os.remove(local_path)
-    except FileNotFoundError:
-        pass
+        try:
+            os.remove(local_path)
+        except FileNotFoundError:
+            pass
 
+    else:
+        # new style: file lives in Supabase Storage
+        filename = screenshot.image_url.split("/")[-1]
+        delete_screenshot_file(filename)
+        
     db.delete(screenshot)
     db.commit()
 

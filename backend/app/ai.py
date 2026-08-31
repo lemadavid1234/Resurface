@@ -30,20 +30,12 @@ SYSTEM_PROMPT = (
 
 )
 
-def classify_screenshot(file_path: str) -> ScreenshotClassification : 
+def classify_screenshot(contents: bytes, mime_type: str) -> ScreenshotClassification : 
 
-    #b64encode returns bytes, not a string, so .decode("utf-8") converts the Base64 into a Python string I can embed in JSON
-    #previously this was: encoded_image = base64.b64encode(open(file_path, "rb").read()).decode("utf-8")
-
-    #that opened the file but never explicitly closed it. In CPython the file is usually closed quickly
-    #once the file object is no longer referenced, but this behavior isn't something code should rely on.
-    #Using a 'with' statement guarantees the file is closed immediately, even if an exception occurs
-    with open(file_path, "rb") as f:
-        encoded_image = base64.b64encode(f.read()).decode("utf-8")
-
-
-    #try to detect the media type, if fails, assume PNG
-    mime_type = mimetypes.guess_type(file_path)[0] or "image/png"
+    #b64 encode returns bytes, not a string, so .decode("utf-8") converts
+    #the Base64 into a Python string that can be embedded in JSON
+    encoded_image = base64.b64encode(contents).decode("utf-8")
+    
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
