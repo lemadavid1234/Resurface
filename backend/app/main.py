@@ -1,4 +1,4 @@
-from app.config import POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_DB
+from app.config import POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_DB
 from app.config import API_BASE_URL, CORS_ORIGINS #testing on phone
 import os
 
@@ -61,11 +61,9 @@ app.add_middleware(
 #read endpoint decorator
 @app.get("/health")
 def health():
-    #attempt to open a psycopg connection to host="localhost",
-    #using 4 Postgres env vars in .env
     try:
         conn = psycopg.connect(
-            host="localhost",
+            host=POSTGRES_HOST,
             port=POSTGRES_PORT,
             user=POSTGRES_USER,
             password=POSTGRES_PASSWORD,

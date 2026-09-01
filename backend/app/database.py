@@ -1,9 +1,9 @@
-from app.config import POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_DB
+from app.config import POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_DB
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session
 
 #connection string SQLAlchemy needs to reach Postgres (dialect+driver://user:pass@host:port/dbname)
-database_url = f'postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:{POSTGRES_PORT}/{POSTGRES_DB}'
+database_url = f'postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}'
 
 #manages a pool of reusable connections to Postgres, built from database_url; doesn't connect yet
 engine = create_engine(database_url)
