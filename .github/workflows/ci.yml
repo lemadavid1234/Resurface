@@ -27,7 +27,11 @@ jobs:
       POSTGRES_PASSWORD: testpass
       POSTGRES_DB: testdb
       POSTGRES_PORT: 5432
+      POSTGRES_HOST: localhost
       OPENAI_API_KEY: sk-test-fake-key-for-ci
+      SUPABASE_URL: https://fake-project.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: fake-service-role-key-not-used
+      SUPABASE_BUCKET: screenshots
     steps:
       - uses: actions/checkout@v7
 

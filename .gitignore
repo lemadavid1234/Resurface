@@ -1,5 +1,6 @@
 # Environment secrets
 .env
+.env.test
 
 # Node / Next.js
 frontend/node_modules/

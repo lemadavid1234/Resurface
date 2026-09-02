@@ -1,13 +1,8 @@
-from fastapi.testclient import TestClient
-from app.main import app
-
 import psycopg
 
-#instantiate client once
-client = TestClient(app)
+#test_health will fail if the Docker container is down
 
-
-def test_health():
+def test_health(client):
     response = client.get("/health")
 
     #assert code expectations
@@ -18,7 +13,7 @@ def test_health():
     assert body["db"] == "connected"
 
 
-def test_health_when_db_is_down(monkeypatch):
+def test_health_when_db_is_down(client, monkeypatch):
 
     def fake_function(*args, **kwargs):
         raise psycopg.OperationalError("simulated failure")
