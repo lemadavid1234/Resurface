@@ -9,9 +9,25 @@ from enum import Enum #Enum class for pending/completed/failed Screenshot status
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy import Computed
 
+import uuid # using UUID attribute
+from sqlalchemy import ForeignKey
+
 #SQLAlchemy ORM (Object Relational Mapping) Model
 #model tells SQLAlchemy: "here is what a Screenshot object looks like,
 #and here's how it maps to a database table"
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    #NOT auto-generated- this is the id GoTrue assigns.
+    #auth.py's sign_up endpoint copies it in after Supabase creates the auth user
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
+
+    #denormalizes copy of auth.users.email - handy for display/queries
+    #without calling GoTrue; Supabase stays the source of truth
+    email: Mapped[str] = mapped_column(unique=True)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
 class ScreenshotStatus(Enum):
     PENDING = "pending"
@@ -22,9 +38,13 @@ class ScreenshotStatus(Enum):
 #describes what's stored in the database
 class Screenshot(Base):
     __tablename__ = "screenshots"
-    
+
     #every table needs this
     id: Mapped[int] = mapped_column(primary_key=True)
+
+    #Foreign Key - can only create a screenshot row if the user_id value exist in User table
+    user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+
     #required, so no optional
     image_url: Mapped[str]
 
