@@ -5,7 +5,6 @@ from pydantic import BaseModel
 
 
 import base64 #python module that handles Base64 encoding and decoding
-import mimetypes #module that converts between a filename or URL and the MIME type associated with the file extension
 
 #sdk already knows how to read api_key from environment, but this is explicitly reading the env variable and passing it to the client
 #   aka: make the client construction explicit instead of relying on the SDK's own internal env lookup
