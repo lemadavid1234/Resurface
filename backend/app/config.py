@@ -18,3 +18,4 @@ CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(","
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_SERVICE_ROLE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 SUPABASE_BUCKET = os.environ["SUPABASE_BUCKET"]
+SUPABASE_ANON_KEY = os.environ["SUPABASE_ANON_KEY"]

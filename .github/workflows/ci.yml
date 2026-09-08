@@ -32,6 +32,7 @@ jobs:
       SUPABASE_URL: https://fake-project.supabase.co
       SUPABASE_SERVICE_ROLE_KEY: fake-service-role-key-not-used
       SUPABASE_BUCKET: screenshots
+      SUPABASE_ANON_KEY: fake-anon-key-not-used
     steps:
       - uses: actions/checkout@v7
 
