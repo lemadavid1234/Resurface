@@ -103,3 +103,14 @@ def refresh(refresh_token: str) -> AuthSession:
 
     return _to_session(result.session)
 
+def sign_out(access_token: str) -> None:
+    """Revoke this user's refresh tokens on Supabase. Best-effort - the
+    outcome doesn't matter (clearing the cookie ends the browser session), and a
+    failure here means never break logout. The access token itself can't be revoked;
+    it stays valid until it expires (~1h)."""
+
+    try:
+        _client.auth.admin.sign_out(access_token, "global")
+    except Exception:
+        pass
+    

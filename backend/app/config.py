@@ -19,3 +19,7 @@ SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_SERVICE_ROLE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 SUPABASE_BUCKET = os.environ["SUPABASE_BUCKET"]
 SUPABASE_ANON_KEY = os.environ["SUPABASE_ANON_KEY"]
+
+#cookie flags - dev defaults; prod sets COOKIE_SECURE=true. COOKIE_SAMESITE=none
+COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "false").lower() == "true"
+COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "lax")

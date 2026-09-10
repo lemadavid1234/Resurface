@@ -6,8 +6,12 @@
 #Resolution is by name, not by import
 # --> same reason never imported monkeypatch, it's a built in pytest fixture, injected by name
 
-def test_create_screenshot(client):
-    response = client.post(
+import uuid
+from app.models import Screenshot, User
+
+
+def test_create_screenshot(authed_client):
+    response = authed_client.post(
         "/screenshots",
         files={"file": ("test.png", b"fake image bytes", "image/png")},
     )
@@ -21,34 +25,59 @@ def test_create_screenshot(client):
     #status is serialized before the background tasks runs
     assert body["status"] == "pending"
 
-def test_list_screenshots(client):
+
+def test_list_screenshots(authed_client):
 
     #starts empty due to the clean_tables() fixure
-    assert client.get("/screenshots").json() == []
+    assert authed_client.get("/screenshots").json() == []
 
-    client.post(
+    authed_client.post(
         "/screenshots",
         files={"file": ("test.png", b"fake image bytes", "image/png")},
     )
 
-    body = client.get("/screenshots").json()
+    body = authed_client.get("/screenshots").json()
     assert len(body) == 1
     assert body[0]["image_url"].startswith("https://fake.supabase.co/") #json array of json objects, list of dicts
 
 
-
-def test_enrichment_populates_row(client):
-    screenshot_id = client.post(
+def test_enrichment_populates_row(authed_client):
+    screenshot_id = authed_client.post(
         "/screenshots",
         files={"file": ("test.png", b"fake image bytes", "image/png")},
     ).json()["id"]
 
-
-
     # TestClient runs the background tasks synchronously - run_enrichment has
     # already finished by the time the POST returns
-    detail = client.get(f"/screenshots/{screenshot_id}").json()
+    detail = authed_client.get(f"/screenshots/{screenshot_id}").json()
     assert detail["status"] == "completed"
     assert detail["category"] == "Test Category"
     assert detail["programming_language"] == "Python"
 
+
+def test_screenshots_require_auth(client):
+    assert client.get("/screenshots").status_code == 401
+
+
+def test_you_only_see_your_own_screenshots(authed_client, db):
+    other = uuid.UUID("00000000-0000-0000-0000-000000000002")
+    db.add(User(id=other, email="other@example.com"))
+    db.commit()                                   # parent must land first
+    db.add(Screenshot(image_url="not-yours", user_id=other))
+    db.commit()
+
+    authed_client.post("/screenshots", files={"file": ("t.png", b"bytes", "image/png")})
+    body = authed_client.get("/screenshots").json()
+    assert len(body) == 1
+    assert body[0]["image_url"].startswith("https://fake.supabase.co/")
+
+
+def test_cannot_read_another_users_screenshot(authed_client, db):
+    other = uuid.UUID("00000000-0000-0000-0000-000000000002")
+    db.add(User(id=other, email="other@example.com"))
+    db.commit()
+    s = Screenshot(image_url="not-yours", user_id=other)
+    db.add(s)
+    db.commit()
+    db.refresh(s)
+    assert authed_client.get(f"/screenshots/{s.id}").status_code == 404

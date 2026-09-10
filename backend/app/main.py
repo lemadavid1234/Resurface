@@ -1,4 +1,4 @@
-from app.config import POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_DB
+from app.config import POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_DB, COOKIE_SECURE, COOKIE_SAMESITE
 from app.config import API_BASE_URL, CORS_ORIGINS #testing on phone
 import os
 
@@ -9,8 +9,8 @@ from fastapi import FastAPI
 from fastapi import Depends #for session dependency injection
 from sqlalchemy.orm import Session #type annotation for db
 from app.database import get_db, engine
-from app.models import Screenshot, ScreenshotStatus
-from app.schemas import ScreenshotRead
+from app.models import Screenshot, ScreenshotStatus, User
+from app.schemas import ScreenshotRead, Credentials, UserRead
 
 from fastapi import UploadFile, File #types for receiving a real uploaded file in a request
 #UploadFile is a Python type (class), 
@@ -36,6 +36,12 @@ from app.ai import classify_screenshot
 
 from app.storage import upload_screenshot, delete_screenshot_file
 
+from fastapi import Cookie
+from app import auth
+
+import time
+from fastapi import Response
+
 reader = easyocr.Reader(['en'], gpu=False)
 
 #create a new FastAPI application
@@ -55,6 +61,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def get_current_user(access_token: str | None = Cookie(default=None)) -> dict:
+    """The authenticated user for this request, or 401. Runs before any endpoint
+    that declares Depends(get_current_user)."""
+    if access_token is None:
+        raise HTTPException(status_code=401, detail="not authenticated")
+
+    try:
+        return auth.get_user_from_token(access_token)
+    except auth.AuthError:
+        raise HTTPException(status_code=401, detail="invalid or expired session")
 
 
 #the route - decorator (@app.get("/health"))
@@ -80,7 +97,7 @@ def health():
 
 #create endpoint decorator
 @app.post("/screenshots", response_model=ScreenshotRead)
-def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File(...), db: Session = Depends(get_db)):
+def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File(...), db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     unique_filename = f"{uuid.uuid4()}_{file.filename}"
     contents = file.file.read()
     mime_type = file.content_type or "image/png"
@@ -90,7 +107,8 @@ def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File
     #straight from Supabase
     image_url = upload_screenshot(unique_filename, contents, mime_type)
     
-    new_screenshot = Screenshot(image_url=image_url)
+    new_screenshot = Screenshot(image_url=image_url, user_id = uuid.UUID(user["id"]))
+
     db.add(new_screenshot) #tells SQLAlchemy, "when we save our changes, include this object"
     db.commit() #save it, SQLAlchem sends SQL statement to database. Now the row exists in Postgres. DB will autogenerate values.
     db.refresh(new_screenshot) #copies (id, created_at... etc) unknown values into new_screenshot object
@@ -101,12 +119,12 @@ def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File
 
 
 @app.get("/screenshots", response_model=list[ScreenshotRead])
-def list_screenshots(db: Session = Depends(get_db), q: str | None = None):
+def list_screenshots(db: Session = Depends(get_db), q: str | None = None, user: dict = Depends(get_current_user)):
     
     #starts with a query representing: SELECT * FROM screenshots
     #query is a SQLAlchemy object that represents an entire SQL query against the screenshots table
     #base query returns all screenshots in order of descending created_at
-    query = db.query(Screenshot)
+    query = db.query(Screenshot).filter(Screenshot.user_id == uuid.UUID(user["id"]))
 
     if q:
         #convert python string to PostgreSQL tsquery object
@@ -176,14 +194,14 @@ def run_enrichment(screenshot_id: int, contents: bytes, mime_type: str):
 
 #whenever someone sends a DELETE request to /screenshots/{screenshot_id}, run delete_screenshot(), if successful return HTTP status code 204 (No Content)
 @app.delete("/screenshots/{screenshot_id}", status_code=204)
-def delete_screenshot(screenshot_id: int, db: Session = Depends(get_db)):
+def delete_screenshot(screenshot_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
 
     screenshot = db.get(Screenshot, screenshot_id)
 
     #if screenshot not found, STOP function.
     #FastAPI catches that HTTPException and converts it into an HTTP response for the client
     #browser/client receieves: HTTP/1.1 404 Not Found, with a JSON body like { detail: "Screenshot not found" }
-    if not screenshot:
+    if not screenshot or screenshot.user_id != uuid.UUID(user["id"]):
         raise HTTPException(status_code=404, detail="Screenshot not found")
 
     #instead of removing from local storage (disk), remove from Supabase Storage
@@ -210,12 +228,86 @@ def delete_screenshot(screenshot_id: int, db: Session = Depends(get_db)):
 
 
 @app.get("/screenshots/{screenshot_id}", response_model=ScreenshotRead)
-def get_screenshot(screenshot_id: int, db: Session = Depends(get_db)):
+def get_screenshot(screenshot_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
 
     screenshot = db.get(Screenshot, screenshot_id)
 
-    if not screenshot:
+    if not screenshot or screenshot.user_id != uuid.UUID(user["id"]):
         raise HTTPException(status_code=404, detail="Screenshot not found")
 
     return screenshot
 
+
+@app.get("/auth/me", response_model=UserRead)
+def read_current_user(user: dict = Depends(get_current_user)):
+    return user
+
+ACCESS_COOKIE = "access_token"
+REFRESH_COOKIE = "refresh_token"
+REFRESH_MAX_AGE = 60 * 60 * 24 * 30
+
+def _set_session_cookies(response: Response, session: auth.AuthSession) -> None:
+    access_max_age = max(0, session.expires_at - int(time.time()))
+    for name, value, max_age in (
+        (ACCESS_COOKIE, session.access_token, access_max_age),
+        (REFRESH_COOKIE, session.refresh_token, REFRESH_MAX_AGE),
+    ):
+        response.set_cookie(
+            name, value,
+            max_age=max_age,
+            httponly=True,
+            secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE,
+        )
+
+def _ensure_user_row(db: Session, user_id: str, email: str | None) -> None:
+    """Mirror the GoTrue user into our users table if it isn't there yet."""
+    if db.get(User, uuid.UUID(user_id)) is None:
+        db.add(User(id=uuid.UUID(user_id), email=email))
+        db.commit()
+
+
+
+@app.post("/auth/signup", response_model=UserRead)
+def signup(creds: Credentials, response: Response, db: Session = Depends(get_db)):
+    try:
+        session = auth.sign_up(creds.email, creds.password)
+    except auth.AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    _ensure_user_row(db, session.user_id, session.email)
+    _set_session_cookies(response, session)
+
+    return {"id": session.user_id, "email": session.email}
+
+@app.post("/auth/login", response_model=UserRead)
+def login(creds: Credentials, response: Response, db: Session = Depends(get_db)):
+    try:
+        session = auth.sign_in(creds.email, creds.password)
+    except auth.AuthError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+
+    _ensure_user_row(db, session.user_id, session.email)
+    _set_session_cookies(response, session)
+    return {"id": session.user_id, "email": session.email}
+
+@app.post("/auth/refresh", response_model=UserRead)
+def refresh_session(response: Response, refresh_token: str | None = Cookie(default=None)):
+    if refresh_token is None:
+        raise HTTPException(status_code=401, detail="no refresh token")
+
+    try:
+        session = auth.refresh(refresh_token)
+    except auth.AuthError as e:
+        raise HTTPException(status_code=401, detail=str(e))    
+
+    _set_session_cookies(response, session) # GoTrue rotated both tokens
+    return {"id": session.user_id, "email": session.email}
+
+@app.post("/auth/logout", status_code=204)
+def logout(response: Response, access_token: str | None = Cookie(default=None)):
+    if access_token is not None:
+        auth.sign_out(access_token)
+
+    response.delete_cookie(ACCESS_COOKIE, path="/", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE)
+    response.delete_cookie(REFRESH_COOKIE, path="/", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE)

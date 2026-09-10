@@ -27,4 +27,15 @@ class ScreenshotRead(BaseModel):
     created_at: datetime
 
 
+class Credentials(BaseModel):
+    email: str
+    password: str
+
+
+class UserRead(BaseModel):
+    id: str
+    email: str | None
+
+
+
 
