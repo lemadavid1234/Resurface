@@ -29,9 +29,9 @@ export default async function ScreenshotsLayout({ children } : { children: React
 
     return (
         <SidebarProvider>
-            <div className="flex min-h-screen">
+            <div className="flex h-screen overflow-hidden">
                 <Sidebar categories={categories}></Sidebar>
-                <main className="flex-1">{children}</main>
+                <main className="flex-1 overflow-y-auto">{children}</main>
             </div>
         </SidebarProvider>
     )
