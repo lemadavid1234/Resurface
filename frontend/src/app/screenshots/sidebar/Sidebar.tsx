@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSidebar } from "./SidebarContext";
+import LogOutButton from "../LogOutButton";
 
 import { X } from "lucide-react";
 
@@ -43,6 +44,9 @@ export default function Sidebar({ categories } : { categories: Category[] }) {
                             </li>
                         ))}
                     </ul>
+                </div>
+                <div className="mt-auto pt-4 border-t border-gray-200">
+                    <LogOutButton/>
                 </div>
             </aside>
         </>

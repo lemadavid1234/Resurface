@@ -33,6 +33,10 @@ export default function UploadItemRow({ file }: {file: File} ) {
                 const res = await fetch(`${API_URL}/screenshots`, {
                     method: "POST",
                     body: formData,
+                    //must use "include" as otherwise POST /screenshots call would go out with zero cookies
+                    //treat the request as unauthenticatd, and reject it,
+                    //aka: credentials: "include" is what makes the browser actually hand over the session cookie so the backend knows who's uploading
+                    credentials: "include", 
                 });
 
                 if (!res.ok) {
@@ -57,7 +61,9 @@ export default function UploadItemRow({ file }: {file: File} ) {
 
         const intervalId = setInterval(async () => {
             // const res = await fetch(`http://localhost:8000/screenshots/${screenshotId}`);
-            const res = await fetch(`${API_URL}/screenshots/${screenshotId}`);
+            const res = await fetch(`${API_URL}/screenshots/${screenshotId}`, {
+                credentials: "include",
+            });
 
             const data = await res.json();
 

@@ -58,7 +58,10 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,#["http://localhost:3000"],
-    allow_methods=["*"],
+    #this is server explicitly agreeing to receive credentials, whereas credentials: "include" is client agreeing to send
+    #without this, the browser silently drops the Set-Cookie from /auth/login
+    allow_credentials=True, 
+    allow_methods=["*"], 
     allow_headers=["*"],
 )
 
@@ -255,7 +258,7 @@ def _set_session_cookies(response: Response, session: auth.AuthSession) -> None:
         response.set_cookie(
             name, value,
             max_age=max_age,
-            httponly=True,
+            httponly=True,  #blocks document.cookie access
             secure=COOKIE_SECURE,
             samesite=COOKIE_SAMESITE,
         )

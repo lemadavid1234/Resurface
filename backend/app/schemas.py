@@ -32,7 +32,7 @@ class ScreenshotRead(BaseModel):
 class UserRead(BaseModel):
     """UserRead exists to define the API's response shape for 'a user' - 
     the JSON that /auth/me, /auth/signup, /auth/login, /auth/refresh all send back.
-    those for endpoints need one consistent, documented shape for a user, that's UserRead"""
+    those four endpoints need one consistent, documented shape for a user, that's UserRead"""
     id: str
     email: str | None
 

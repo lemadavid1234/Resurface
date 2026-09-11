@@ -27,8 +27,10 @@ export default function DeleteButton({ screenshot_id, closeHref } : { screenshot
             // const res = await fetch(`http://localhost:8000/screenshots/${screenshot_id}`, 
             //     { method: "DELETE" }
             // );
-            const res = await fetch(`${API_URL}/screenshots/${screenshot_id}`, 
-                { method: "DELETE" }
+            const res = await fetch(`${API_URL}/screenshots/${screenshot_id}`, { 
+                method: "DELETE",
+                credentials: "include",
+                },
             );
             
             if (!res.ok) {
