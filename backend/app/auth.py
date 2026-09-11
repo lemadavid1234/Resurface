@@ -91,6 +91,8 @@ def get_user_from_token(access_token: str) -> dict:
         raise AuthError("invalid token")
 
     claims = response["claims"]
+    # where sub = subject/user id
+    # .get("key") so it returns None instead of crashing if the claim is absent
     return {"id": claims["sub"], "email": claims.get("email")}
 
 
@@ -113,4 +115,3 @@ def sign_out(access_token: str) -> None:
         _client.auth.admin.sign_out(access_token, "global")
     except Exception:
         pass
-    
