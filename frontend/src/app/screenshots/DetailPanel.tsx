@@ -5,9 +5,14 @@ import DeleteButton from "./DeleteButton";
 
 import { getStatusLabel } from "./getStatusLabel";
 
-export default function DetailPanel({ screenshot, q } : { screenshot: Screenshot; q?: string }) {
+export default function DetailPanel({ screenshot, q, category } : { screenshot: Screenshot; q?: string; category?: string }) {
 
-    const closeHref = q ? `?q=${encodeURIComponent(q)}` : "/screenshots";
+    // const closeHref = q ? `?q=${encodeURIComponent(q)}` : "/screenshots";
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (category) params.set("category", category);
+
+    const closeHref = params.toString() ? `?${params.toString()}` : "/screenshots";
 
 
     return (

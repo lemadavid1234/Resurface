@@ -21,11 +21,19 @@ function formatRelativeDate(isoString: string): string {
 }
 
 
-export default function ScreenshotCard({ screenshot, q }: { screenshot: Screenshot; q?: string }) {
+export default function ScreenshotCard({ screenshot, q, category }: { screenshot: Screenshot; q?: string; category?: string }) {
 
-    const href = q
-        ? `?q=${encodeURIComponent(q)}&screenshot=${screenshot.id}`
-        : `?screenshot=${screenshot.id}`;
+    // const href = q
+    //     ? `?q=${encodeURIComponent(q)}&screenshot=${screenshot.id}`
+    //     : `?screenshot=${screenshot.id}`;
+
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (category) params.set("category", category);
+    params.set("screenshot", String(screenshot.id));
+
+    const href = `?${params.toString()}`;
+
 
     return (
         <Link href={href} className='block border border-gray-400 rounded-lg overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition'>

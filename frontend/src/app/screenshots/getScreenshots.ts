@@ -8,12 +8,20 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 
-export async function getScreenshots(q? : string): Promise<Screenshot[]> {
+export async function getScreenshots(q? : string, category? : string): Promise<Screenshot[]> {
 
-    //construct url: if q exists encode search terms into url, else return all
-    const url = q
-        ? `${API_URL}/screenshots?q=${encodeURIComponent(q)}`
+    //URLSearchParams build the query string from whichever params are actually present,
+    //instead of hand-writing every combination of "? a=x&b=y" / "?a=x" / "?b=y" / "" with ternaries
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (category) params.set("category", category);
+
+    //v1: construct url: if q exists encode search terms into url, else return all
+    //v2: construct url based on f either q and/or category exist, if neither exists, default to all
+    const url = params.toString()
+        ? `${API_URL}/screenshots?${params.toString()}`
         : `${API_URL}/screenshots`;
+    
 
     //cookies() reads the cookie the browser sent to the Next server;
     const cookieStore = await cookies(); 

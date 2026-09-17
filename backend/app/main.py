@@ -122,12 +122,20 @@ def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File
 
 
 @app.get("/screenshots", response_model=list[ScreenshotRead])
-def list_screenshots(db: Session = Depends(get_db), q: str | None = None, user: dict = Depends(get_current_user)):
+def list_screenshots(
+    db: Session = Depends(get_db),
+    q: str | None = None,
+    category: str | None = None,
+    user: dict = Depends(get_current_user)
+    ):
     
     #starts with a query representing: SELECT * FROM screenshots
     #query is a SQLAlchemy object that represents an entire SQL query against the screenshots table
     #base query returns all screenshots in order of descending created_at
     query = db.query(Screenshot).filter(Screenshot.user_id == uuid.UUID(user["id"]))
+
+    if category: 
+        query = query.filter(Screenshot.category == category)
 
     if q:
         #convert python string to PostgreSQL tsquery object

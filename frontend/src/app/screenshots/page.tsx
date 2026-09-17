@@ -9,15 +9,16 @@ import DetailPanel from "./DetailPanel";
 import { getScreenshots } from "./getScreenshots";
 import SidebarToggleButton from "./sidebar/SidebarToggleButton";
 
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
+import Link from "next/link";
 
 
 //async function because...
 export default async function ScreenshotsPage(
-    { searchParams }: { searchParams: Promise<{ q?: string; screenshot?: string }> }
+    { searchParams }: { searchParams: Promise<{ q?: string; screenshot?: string; category?: string }> }
 ) {
     //since prop is a Promise, can't read off .q directly, therefore must await
-    const { q, screenshot: selectedId } = await searchParams;
+    const { q, screenshot: selectedId, category } = await searchParams;
 
     //websearch_to_tsquery automatically handles trimming, lowercasing, removing stop words during tokenization
     //however, trimming "    " will result in "" therefore q is falsy and will render all screenshot
@@ -25,7 +26,7 @@ export default async function ScreenshotsPage(
 
     //don't need ': Screenshot[]' annotation here since TS already knows the return type from getScreenshot's own signature and infers it automatically
     //also means 'import type { Screenshot } from ./types' line becomes unused
-    const screenshots = await getScreenshots(searchQuery);
+    const screenshots = await getScreenshots(searchQuery, category);
 
     //once screenshots is fetched
     const selected = selectedId ? screenshots.find((s) => s.id === Number(selectedId)) : undefined;
@@ -56,12 +57,20 @@ export default async function ScreenshotsPage(
                 </form>
                 <UploadModal />
             </div>
+            {category && (
+                <div className="flex items-center gap-2 px-4 pt-3 text-sm text-gray-600">
+                    <span>Filtering by <strong>{category}</strong></span>
+                    <Link href="/screenshots" aria-label="Clear category filter" className="text-gray-400 hover:text-gray-600">
+                        <X size={14} />
+                    </Link>
+                </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                 {screenshots.map((screenshot) => (
-                    <ScreenshotCard key={screenshot.id} screenshot={screenshot} q={q} />
+                    <ScreenshotCard key={screenshot.id} screenshot={screenshot} q={q} category={category} />
                 ))}
             </div>
-            {selected && <DetailPanel screenshot={selected} q={q}/>}
+            {selected && <DetailPanel screenshot={selected} q={q} category={category}/>}
         </div>
 
     )
