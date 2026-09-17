@@ -14,3 +14,9 @@ export type Screenshot = {
     status: "pending" | "completed" | "failed";
 
 };
+
+//mirrors the backend's UserRead schema
+export type User = {
+    id: string,
+    email: string | null;
+}
