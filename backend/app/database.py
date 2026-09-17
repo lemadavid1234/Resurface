@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, Session
 database_url = f'postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}'
 
 #manages a pool of reusable connections to Postgres, built from database_url; doesn't connect yet
-engine = create_engine(database_url)
+engine = create_engine(database_url, pool_pre_ping=True)
 
 class Base(DeclarativeBase):
     pass
