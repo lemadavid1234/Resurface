@@ -25,16 +25,19 @@ export default async function CategoriesPage() {
 
             <div className="p-4 max-w-md flex flex-col gap-1 border border-gray-700">
                 <h1 className="text-lg font-bold mb-2">Categories</h1>
-                {categories.map((c) => (
-                    <Link
-                        key={c.name}
-                        href={`/screenshots?category=${encodeURIComponent(c.name)}`}
-                        className="flex justify-between text-sm px-2 py-1.5 rounded hover:bg-gray-100"
-                    >
-                        <span>{c.name}</span>
-                        <span className="text-gray-400">{c.count}</span>
-                    </Link>
-                ))}
+                <ul className="flex flex-col gap-1 border">
+                    {categories.map((c) => (
+                        <li key={c.name}>
+                            <Link
+                                href={`/screenshots?category=${encodeURIComponent(c.name)}`}
+                                className="flex justify-between text-sm px-2 py-1.5 rounded hover:bg-gray-100"
+                            >
+                                <span>{c.name}</span>
+                                <span className="text-gray-400">{c.count}</span>
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
             </div>
         </div>
     )
