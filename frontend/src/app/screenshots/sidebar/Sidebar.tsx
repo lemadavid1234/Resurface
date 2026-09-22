@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 
 import { X } from "lucide-react";
 
+
 type Category = { name: string, count: number };
 
 const NAV_ITEMS = [
@@ -24,6 +25,7 @@ export default function Sidebar({ categories } : { categories: Category[] }) {
     const pathname = usePathname();
 
     //only show top 10 categories
+    //categories is passed categories by descending order due to getCategoryCount used in ScreenshotsLayout (screenshots/layout.tsx), meaning .slice(0,10) should be top 10
     const topCategories = categories.slice(0,10);
 
     return (
@@ -61,9 +63,15 @@ export default function Sidebar({ categories } : { categories: Category[] }) {
                     <p className="text-xs uppercase text-gray-500 mb-2">Top 10 Categories</p>
                     <ul className="flex flex-col gap-1">
                         {topCategories.map((c) => (
-                            <li key={c.name} className="flex justify-between text-sm">
-                                <span>{c.name}</span>
-                                <span className="text-gray-400">{c.count}</span>
+                            <li key={c.name}>
+                                <Link
+                                    onClick={close}
+                                    href={`/screenshots?category=${encodeURIComponent(c.name)}`}
+                                    className="flex justify-between text-sm px-2 py-1 rounded hover:bg-gray-100"
+                                >
+                                    <span>{c.name}</span>
+                                    <span className="text-gray-400">{c.count}</span>
+                                </Link>
                             </li>
                         ))}
                     </ul>
