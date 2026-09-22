@@ -51,7 +51,7 @@ def test_enrichment_populates_row(authed_client):
     # already finished by the time the POST returns
     detail = authed_client.get(f"/screenshots/{screenshot_id}").json()
     assert detail["status"] == "completed"
-    assert detail["category"] == "Test Category"
+    assert detail["category"] == "Other"
     assert detail["programming_language"] == "Python"
 
 

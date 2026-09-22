@@ -19,7 +19,7 @@ from sqlalchemy import text
 
 from app.main import app
 from app.database import engine
-from app.ai import ScreenshotClassification
+from app.ai import ScreenshotClassification, Category
 
 from app import auth
 from tests.constants import TEST_USER_ID
@@ -81,7 +81,7 @@ def fake_externals(monkeypatch):
 
     def fake_classify_screenshot(contents, mime_type):
         return ScreenshotClassification(
-            category="Test Category",
+            category=Category.OTHER,
             ai_summary="A test screenshot",
             programming_language="Python",
             source_platform="Test",
