@@ -100,7 +100,7 @@ def health():
 
 #create endpoint decorator
 @app.post("/screenshots", response_model=ScreenshotRead)
-def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File(...), db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File(...), db: Session = Depends(get_db), user: dict = Depends(get_current_user), status_code=201):
     unique_filename = f"{uuid.uuid4()}_{file.filename}"
     contents = file.file.read()
     mime_type = file.content_type or "image/png"
@@ -168,7 +168,7 @@ def list_screenshots(
 
 
 def run_enrichment(screenshot_id: int, contents: bytes, mime_type: str):
-    
+
     with Session(engine) as db:
         #db.get(ModelClass, primary_key). Telling SQLAlchemy: 1. Which table? 2. Which row?
         # --> .get() method: tells SQLAlchemy, "look in whatever table this class maps to"
