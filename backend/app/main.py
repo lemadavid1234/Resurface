@@ -1,6 +1,6 @@
 from app.config import POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_DB, COOKIE_SECURE, COOKIE_SAMESITE
-from app.config import API_BASE_URL, CORS_ORIGINS #testing on phone
-import os
+from app.config import CORS_ORIGIN
+
 
 import psycopg #driver that lets FASTApi talk to Postgres
 
@@ -17,7 +17,7 @@ from fastapi import UploadFile, File #types for receiving a real uploaded file i
 #contains useful info of uploaded file (.filename, .content_type, underlying file object: contents = file.file.read() )
 #File - FastAPI funtion, tells FastAPI, look in the incoming HTTP request for a file upload, in FastAPI "..." means required vs File(None) which is optional
 
-from fastapi.staticfiles import StaticFiles
+
 
 import uuid #generate a unique name server-side for each screenshot
 
@@ -49,17 +49,14 @@ app = FastAPI(
     docs_url="/api/v1/sandbox"
 )
 
-#os creates dir if it's missing, and does nothing (no error) if it already exists
-os.makedirs("uploads", exist_ok=True)
-#anything saved into "/uploads" folder becomes reachable at http://localhost:8000/uploads/<filename>
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 
 #allow_origins: explicitly whitelisting frontend origin
 #allow_methods: using GET, POST, later add DELETE
 #allow_headers: permits the request headers frontend will actually send
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,#["http://localhost:3000"],
+    allow_origins=[CORS_ORIGIN],#["http://localhost:3000"],
     #this is server explicitly agreeing to receive credentials, whereas credentials: "include" is client agreeing to send
     #without this, the browser silently drops the Set-Cookie from /auth/login
     allow_credentials=True, 
@@ -108,7 +105,7 @@ def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File
     contents = file.file.read()
     mime_type = file.content_type or "image/png"
 
-    #push the raw bytes to a Supabase Storage bucket instead of the local uploads/ folder
+    #push the raw bytes to a Supabase Storage bucket
     #returns the file's public URL, which we store on the row so the frontend loads it
     #straight from Supabase
     image_url = upload_screenshot(unique_filename, contents, mime_type)
@@ -222,24 +219,10 @@ def delete_screenshot(screenshot_id: int, db: Session = Depends(get_db), user: d
     if not screenshot or screenshot.user_id != uuid.UUID(user["id"]):
         raise HTTPException(status_code=404, detail="Screenshot not found")
 
-    #instead of removing from local storage (disk), remove from Supabase Storage
-    #however currently files still live in local disk, so must perform
-    #orphan cleanup/garbage collection
-    if screenshot.image_url.startswith(API_BASE_URL):
-        #remove file from local disk storage
-        #local_path = screenshot.image_url.replace("http://localhost:8000/uploads/", "uploads/")
-        filename = screenshot.image_url.split("/uploads/")[-1]
-        local_path = f"uploads/{filename}"
 
-        try:
-            os.remove(local_path)
-        except FileNotFoundError:
-            pass
-
-    else:
-        # new style: file lives in Supabase Storage
-        filename = screenshot.image_url.split("/")[-1]
-        delete_screenshot_file(filename)
+    #the file lives in Supabase Storage; the last URL segment is its name in the bucket
+    filename = screenshot.image_url.split("/")[-1]
+    delete_screenshot_file(filename)
         
     db.delete(screenshot)
     db.commit()

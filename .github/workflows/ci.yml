@@ -33,6 +33,7 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: fake-service-role-key-not-used
       SUPABASE_BUCKET: screenshots
       SUPABASE_ANON_KEY: fake-anon-key-not-used
+      CORS_ORIGIN: http://localhost:3000
     steps:
       - uses: actions/checkout@v7
 
