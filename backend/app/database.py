@@ -6,6 +6,10 @@ from sqlalchemy.orm import DeclarativeBase, Session
 database_url = f'postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}'
 
 #manages a pool of reusable connections to Postgres, built from database_url; doesn't connect yet
+#pool_pre_ping=True means everytime SQLAlchemy is about to hand my code a pooled connection, it first does a trivial
+#check (essentialy SELECT 1) against it. If that check fails, it quietly throws the dead connection away and opens a fresh one instead.
+#before your actual query ever runs.
+#tradeoff: request will see a few extra milliseconds of latency on that one request instead of a 500
 engine = create_engine(database_url, pool_pre_ping=True)
 
 class Base(DeclarativeBase):

@@ -14,7 +14,7 @@ export default async function CategoriesPage() {
     //     name: string,
     //     count: number, 
     // };
-    
+
     
     return (
         <div>

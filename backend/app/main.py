@@ -83,6 +83,7 @@ def get_current_user(access_token: str | None = Cookie(default=None)) -> dict:
 #read endpoint decorator
 @app.get("/health")
 def health():
+    '''attempts a real Postgres connection, and returns db_status'''
     try:
         conn = psycopg.connect(
             host=POSTGRES_HOST,

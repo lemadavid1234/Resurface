@@ -19,7 +19,7 @@ export default function LoginPage() {
 
         const form = new FormData(e.currentTarget);
 
-        try {
+        try {                       //http://localhost:8000/auth/login
             const res = await fetch(`${API_URL}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -36,7 +36,6 @@ export default function LoginPage() {
                 setError(body?.detail ?? "Log in Failed");
                 return;
             }
-    
             // router.push("/screenshots");
             // router.refresh();
             window.location.href = "/screenshots";
