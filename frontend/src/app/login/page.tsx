@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react"
 import { API_URL } from "../screenshots/apiUrl";
 
@@ -8,7 +7,6 @@ import { API_URL } from "../screenshots/apiUrl";
 
 export default function LoginPage() {
 
-    const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 

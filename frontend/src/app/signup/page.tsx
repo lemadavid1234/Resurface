@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useState } from "react"
 import { API_URL } from "../screenshots/apiUrl";
 
@@ -8,7 +8,7 @@ import { API_URL } from "../screenshots/apiUrl";
 
 export default function SignUpPage() {
 
-    const router = useRouter();
+    // const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
@@ -38,8 +38,10 @@ export default function SignUpPage() {
                 return;
             }
     
-            router.push("/screenshots");
-            router.refresh();
+            // router.push("/screenshots");
+            // router.refresh();
+            window.location.href = "/screenshots";
+            
         } catch {
             setError("Can't reach the server - check your connection and try again.");
         } finally {
