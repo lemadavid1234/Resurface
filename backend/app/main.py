@@ -99,8 +99,8 @@ def health():
     return {"status": "ok", "db": db_status}
 
 #create endpoint decorator
-@app.post("/screenshots", response_model=ScreenshotRead)
-def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File(...), db: Session = Depends(get_db), user: dict = Depends(get_current_user), status_code=201):
+@app.post("/screenshots", response_model=ScreenshotRead, status_code=201)
+def create_screenshot(background_tasks: BackgroundTasks, file: UploadFile = File(...), db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     unique_filename = f"{uuid.uuid4()}_{file.filename}"
     contents = file.file.read()
     mime_type = file.content_type or "image/png"

@@ -15,7 +15,7 @@ def test_create_screenshot(authed_client):
         "/screenshots",
         files={"file": ("test.png", b"fake image bytes", "image/png")},
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     body = response.json()
 
     #the endpoint stores whatever upload_screenshot returned and echoes it back 
