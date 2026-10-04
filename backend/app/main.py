@@ -179,6 +179,10 @@ def run_enrichment(screenshot_id: int, contents: bytes, mime_type: str):
         #SQLAlchemy wraps each mapped column with special logic (called instrumentation) that intercepts reads and writes.
         screenshot = db.get(Screenshot, screenshot_id)
 
+        #pylance is flagging, since db.get is typed to return Optional[Screenshot] which could return Screenshot | None
+        if screenshot is None:
+            return
+
         try:
             result = reader.readtext(contents)
             #returns a list of only text that exceeds a confidence score of 0.5 from result (list of tuples)
