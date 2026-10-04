@@ -83,6 +83,7 @@ def get_user_from_token(access_token: str) -> dict:
     (fetched once from the JWKS endpoint, then cached in-process).
     Return the identity in the token. Raises AuthError if it's invalid or expired."""
     try:
+        #response is of type ClaimsResponse which has three keys: claims (the payload), headers, signature
         response = _client.auth.get_claims(access_token)
     except GoTrueError as e:
         raise AuthError(str(e)) from e
@@ -91,9 +92,13 @@ def get_user_from_token(access_token: str) -> dict:
         raise AuthError("invalid token")
 
     claims = response["claims"]
+
+    user_id = claims.get("sub")
+    if not user_id:
+        raise AuthError("token has no subject")
     # where sub = subject/user id
     # .get("key") so it returns None instead of crashing if the claim is absent
-    return {"id": claims["sub"], "email": claims.get("email")}
+    return {"id": user_id, "email": claims.get("email")}
 
 
 def refresh(refresh_token: str) -> AuthSession:
