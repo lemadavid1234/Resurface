@@ -45,7 +45,9 @@ from fastapi import Response
 reader = easyocr.Reader(['en'], gpu=False)
 
 #create a new FastAPI application
-app = FastAPI()
+app = FastAPI(
+    docs_url="/api/v1/sandbox"
+)
 
 #os creates dir if it's missing, and does nothing (no error) if it already exists
 os.makedirs("uploads", exist_ok=True)
