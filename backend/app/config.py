@@ -1,5 +1,6 @@
 import os
 from pathlib import Path #instead of treating Path as string, it creates a Path object that has useful methods
+from typing import Literal, cast, get_args
 from dotenv import load_dotenv
 
 #find .env file in proj root and load its env variables into Python program
@@ -21,4 +22,12 @@ SUPABASE_ANON_KEY = os.environ["SUPABASE_ANON_KEY"]
 
 #cookie flags - dev defaults; prod sets COOKIE_SECURE=true. COOKIE_SAMESITE=none
 COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "false").lower() == "true"
-COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "lax")
+
+#Starlette's set_cookie/delete_cookie only accept these three values, but an env var is just a string:
+#check it once at startup instead of finding out on the first login
+SameSite = Literal["lax", "strict", "none"]
+_samesite = os.environ.get("COOKIE_SAMESITE", "lax").lower()
+if _samesite not in get_args(SameSite):
+    raise ValueError(f"COOKIE_SAMESITE must be one of {get_args(SameSite)}, got {_samesite!r}")
+COOKIE_SAMESITE = cast(SameSite, _samesite) #safe: just checked above
+
