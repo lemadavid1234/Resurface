@@ -186,7 +186,7 @@ def run_enrichment(screenshot_id: int, contents: bytes, mime_type: str):
         try:
             result = reader.readtext(contents)
             #returns a list of only text that exceeds a confidence score of 0.5 from result (list of tuples)
-            text_fragments = [text for (_, text, confidence_score) in result if confidence_score >= 0.5]
+            text_fragments = [text for (_, text, confidence_score) in result if confidence_score >= 0.5] # pyright: ignore[reportOperatorIssue]
             
             #SQLAlchemy only tracks changes made directly to the mapped object's attributes
             screenshot.extracted_text = " ".join(text_fragments)
